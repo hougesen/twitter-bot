@@ -12,6 +12,7 @@
 /test.rb
 
 /src
+keys.txt
 
 # Used by dotenv library to load environment variables.
 .env
