@@ -1,18 +1,16 @@
-gem 'rss'
-gem 'twitter'
-
 require 'twitter'
 require 'rss'
 require 'open-uri'
 require 'date'
 require 'time'
+require 'dotenv/load'
 
 # The API keys to post on Twitter. Remember to change them to your own.
 client = Twitter::REST::Client.new do |config|
-  config.consumer_key        = 'consumer_key'
-  config.consumer_secret     = 'consumer_secret'
-  config.access_token        = 'access_token'
-  config.access_token_secret = 'access_token_secret'
+  config.consumer_key        = ENV['CONSUMER_KEY']
+  config.consumer_secret     = ENV['CONSUMER_SECRET']
+  config.access_token        = ENV['ACCESS_TOKEN']
+  config.access_token_secret = ENV['ACCESS_TOKEN_SECRET']
 end
 
 date_today = Date.today.to_s
@@ -20,7 +18,7 @@ time_now = Time.now.getlocal('UTC').to_s.split(' ')
 time_now = time_now[1].split(':')
 time_now = (time_now[0].to_i * 60) + time_now[1].to_i # We calculate the current time by changing it to a minute format
 
-url = 'your_url/' # Remember to change to RSS feed
+url = ENV['RSS_FEED']
 URI.open(url) do |rss|
   feed = RSS::Parser.parse(rss)
   post_date = feed.channel.item.pubDate.to_s
@@ -63,7 +61,8 @@ URI.open(url) do |rss|
   parced_time = post_date[4].split(':')
   parced_time = parced_time[0].to_i * 60 + parced_time[1].to_i
 
-  # If there is a post that was published today, then will check if the post was posted within the last 2 hours. If both are true, then it will tweet.
+  # If there is a post that was published today, then will check if the post was posted within the last 2 hours.
+  # If both are true, then it will tweet.
   if parced_date == date_today && time_now - parced_time < 120
     post_title = feed.channel.item.title.to_s
     post_link = feed.channel.item.link.to_s
