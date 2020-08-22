@@ -1,9 +1,9 @@
-require 'twitter'
-require 'rss'
-require 'open-uri'
 require 'date'
-require 'time'
 require 'dotenv/load'
+require 'open-uri'
+require 'rss'
+require 'time'
+require 'twitter'
 
 # The API keys to post on Twitter. Remember to change them to your own.
 client = Twitter::REST::Client.new do |config|
@@ -21,6 +21,7 @@ time_now = (time_now[0].to_i * 60) + time_now[1].to_i # We calculate the current
 url = ENV['RSS_FEED']
 URI.open(url) do |rss|
   feed = RSS::Parser.parse(rss)
+
   post_date = feed.channel.item.pubDate.to_s
   post_date = post_date.split(' ')
 
@@ -66,8 +67,27 @@ URI.open(url) do |rss|
   if parced_date == date_today && time_now - parced_time < 120
     post_title = feed.channel.item.title.to_s
     post_link = feed.channel.item.link.to_s
-    client.update "Jeg har lige postet en ny artikel kaldet \"#{post_title}\" den kan læses her:  #{post_link} #webudvikling #webdesign #multimediedesigner"
+    all_items = feed.channel.item.to_s.split(' ')
+    string = "Jeg har lige postet en ny artikel kaldet \"#{post_title}\" den kan læses her: #{post_link}"
+
+    # For converting Wordpress category/tags into strings
+    all_categorys = []
+    i = 0
+    while i < all_items.length
+      all_categorys.push(all_items[i]) if all_items[i].include? 'category'
+      i += 1
+    end
+    j = 0
+    while j < all_categorys.length
+      all_categorys[j].slice! '<category>'
+      all_categorys[j].slice! '</category>'
+      string += " ##{all_categorys[j]}"
+      j += 1
+    end
+
+    client.update string
     puts 'A tweet has been posted'
+
   else
     puts 'There is no new posts to tweet about'
   end
